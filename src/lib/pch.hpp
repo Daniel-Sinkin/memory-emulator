@@ -1,4 +1,4 @@
-// pba/pch.hpp
+// memory_emu/pch.hpp
 #pragma once
 // Standard Library
 #include <algorithm>      // IWYU pragma: keep
@@ -27,20 +27,6 @@
 #include <unordered_map>  // IWYU pragma: keep
 #include <utility>        // IWYU pragma: keep
 #include <vector>         // IWYU pragma: keep
-//
-#include <glad/glad.h>  // IWYU pragma: keep
-//
-#ifndef GLFW_INCLUDE_NONE
-#    define GLFW_INCLUDE_NONE
-#endif
-#include <GLFW/glfw3.h>  // IWYU pragma: keep
-//
-#include <backends/imgui_impl_glfw.h>     // IWYU pragma: keep
-#include <backends/imgui_impl_opengl3.h>  // IWYU pragma: keep
-#include <glm/glm.hpp>                    // IWYU pragma: keep
-#include <glm/gtc/matrix_transform.hpp>   // IWYU pragma: keep
-#include <glm/gtc/type_ptr.hpp>           // IWYU pragma: keep
-#include <imgui.h>                        // IWYU pragma: keep
 //
 #include "gsl.hpp"  // IWYU pragma: keep
 
