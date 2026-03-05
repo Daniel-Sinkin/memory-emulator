@@ -42,20 +42,14 @@ file(GLOB_RECURSE LIB_SOURCES CONFIGURE_DEPENDS
   "src/lib/*.cpp"
 )
 
-if(LIB_SOURCES)
-  add_library(memory_emu_lib STATIC ${LIB_SOURCES})
-  target_include_directories(memory_emu_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/lib)
-  target_link_libraries(memory_emu_lib PUBLIC Microsoft.GSL::GSL)
-  target_compile_options(memory_emu_lib PRIVATE ${COMMON_WARNINGS})
-  target_precompile_headers(memory_emu_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/pch.hpp)
-else()
-  add_library(memory_emu_lib INTERFACE)
-  target_include_directories(memory_emu_lib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/lib)
-  target_link_libraries(memory_emu_lib INTERFACE Microsoft.GSL::GSL)
-endif()
+add_library(memory_emu_lib STATIC ${LIB_SOURCES})
+target_include_directories(memory_emu_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/lib)
+target_link_libraries(memory_emu_lib PUBLIC Microsoft.GSL::GSL)
+target_compile_options(memory_emu_lib PRIVATE ${COMMON_WARNINGS})
+target_precompile_headers(memory_emu_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/pch.hpp)
 
 add_executable(memory_emu src/app/main.cpp)
 
 target_link_libraries(memory_emu PRIVATE memory_emu_lib)
-target_precompile_headers(memory_emu REUSE_FROM memory_emu_lib)
 target_compile_options(memory_emu PRIVATE ${COMMON_WARNINGS})
+target_precompile_headers(memory_emu REUSE_FROM memory_emu_lib)
