@@ -12,10 +12,10 @@ namespace ds_mem {
 constexpr u32 k_word_size = 1;
 constexpr u32 k_cacheline_size = 4 * k_word_size;
 
-constexpr u32 k_address_bits = 8u;
-constexpr u32 k_memory_size = 1u << k_address_bits;
-constexpr u32 k_l1_size = 16u;
-constexpr u32 k_l2_size = 64u;
+constexpr u32 k_address_bits = 12u;
+constexpr u32 k_memory_size = 1u << k_address_bits; // 4096
+constexpr u32 k_l1_size = 128u;                     // 32 slots
+constexpr u32 k_l2_size = 1024u;                    // 256 slots
 
 constexpr u32 k_l1_latency = 1;
 constexpr u32 k_l2_latency = 5;
@@ -557,19 +557,79 @@ private:
     CPU cpu_;
 };
 
+constexpr auto k_mat_n = 32u;
+constexpr auto k_base_a = 0u;
+constexpr auto k_base_b = k_mat_n * k_mat_n;
+constexpr auto k_base_c = 2u * k_mat_n * k_mat_n;
+
+auto mat_addr(u32 base, u32 row, u32 col) -> u32 {
+    return base + row * k_mat_n + col;
+}
+
+auto init_matrices(CPU &cpu) -> void {
+    for (auto i = 0u; i < k_mat_n; ++i) {
+        for (auto j = 0u; j < k_mat_n; ++j) {
+            cpu.write(mat_addr(k_base_a, i, j), static_cast<char>((i + j) % 3 + 1));
+            cpu.write(mat_addr(k_base_b, i, j), static_cast<char>((i * 2 + j) % 3 + 1));
+            cpu.write(mat_addr(k_base_c, i, j), '\0');
+        }
+    }
+    cpu.flush();
+}
+
+auto gemm_ijk(CPU &cpu) -> void {
+    for (auto i = 0u; i < k_mat_n; ++i) {
+        for (auto j = 0u; j < k_mat_n; ++j) {
+            auto sum = std::to_integer<i32>(cpu.read(mat_addr(k_base_c, i, j)));
+            for (auto k = 0u; k < k_mat_n; ++k) {
+                auto a = std::to_integer<i32>(cpu.read(mat_addr(k_base_a, i, k)));
+                auto b = std::to_integer<i32>(cpu.read(mat_addr(k_base_b, k, j)));
+                sum += a * b;
+            }
+            cpu.write(mat_addr(k_base_c, i, j), static_cast<char>(sum & 0xFF));
+        }
+    }
+}
+
+auto gemm_ikj(CPU &cpu) -> void {
+    for (auto i = 0u; i < k_mat_n; ++i) {
+        for (auto k = 0u; k < k_mat_n; ++k) {
+            auto a = std::to_integer<i32>(cpu.read(mat_addr(k_base_a, i, k)));
+            for (auto j = 0u; j < k_mat_n; ++j) {
+                auto c = std::to_integer<i32>(cpu.read(mat_addr(k_base_c, i, j)));
+                auto b = std::to_integer<i32>(cpu.read(mat_addr(k_base_b, k, j)));
+                c += a * b;
+                cpu.write(mat_addr(k_base_c, i, j), static_cast<char>(c & 0xFF));
+            }
+        }
+    }
+}
+
 } // namespace ds_mem
 
 int main() {
     using namespace ds_mem;
 
-    MemoryVM vm{};
-    auto &cpu = vm.cpu();
-    cpu.write(0x00, 'A');
-    cpu.write(0x04, 'B');
-    cpu.write(0x08, 'C');
-    cpu.write(0x0C, 'D');
-    cpu.flush();
-    cpu.write(0x10, 'E');
+    std::println("row stride A, column stride B");
+    {
+        MemoryVM vm{};
+        auto &cpu = vm.cpu();
+        init_matrices(cpu);
+        cpu.flush();
+        gemm_ijk(cpu);
+        cpu.flush();
+        cpu.print_stats();
+    }
 
-    cpu.print_detailed();
+    std::println();
+    std::println("row stride A and B");
+    {
+        MemoryVM vm{};
+        auto &cpu = vm.cpu();
+        init_matrices(cpu);
+        cpu.flush();
+        gemm_ikj(cpu);
+        cpu.flush();
+        cpu.print_stats();
+    }
 }
