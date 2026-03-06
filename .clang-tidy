@@ -1,0 +1,6 @@
+Checks: >-
+  -*,
+  misc-const-correctness,
+  readability-make-member-function-const
+
+HeaderFilterRegex: '^.*/memory-emulator/src/.*'

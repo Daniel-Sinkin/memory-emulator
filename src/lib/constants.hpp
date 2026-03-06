@@ -3,10 +3,11 @@
 #include <cstddef>
 #include <cstdint>
 #ifdef __cpp_lib_stdfloat
-#include <stdfloat>
+#    include <stdfloat>
 #endif
 
-namespace ds_mem {
+namespace ds_mem
+{
 
 using usize = std::size_t;
 
@@ -27,4 +28,4 @@ using u16 = std::uint16_t;
 using u32 = std::uint32_t;
 using u64 = std::uint64_t;
 
-} // namespace ds_mem
+}  // namespace ds_mem
